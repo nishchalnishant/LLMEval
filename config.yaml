@@ -1,0 +1,24 @@
+judge_model: gemini-1.5-flash
+judge_cache_path: .eval_cache
+n_samples: 200
+batch_size: 10
+batch_sleep_seconds: 1
+
+models:
+  - name: gemini-1.5-flash
+    provider: gemini
+  - name: llama-3.3-70b
+    provider: groq
+  - name: nvidia-llama-3.3-70b
+    provider: nvidia_nim
+    model: meta/llama-3.3-70b-instruct
+  - name: mistral-7b-clinical
+    provider: vllm
+    endpoint: http://localhost:8000
+
+metrics:
+  faithfulness: true
+  answer_relevance: true
+  context_precision: true
+  llm_judge: true
+  adversarial: true
