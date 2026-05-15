@@ -3,7 +3,7 @@ import logging
 import hashlib
 import shelve
 import os
-import google.generativeai as genai
+from google import genai
 
 logger = logging.getLogger(__name__)
 _CACHE_PATH = os.environ.get("JUDGE_CACHE_PATH", ".eval_cache")
@@ -21,9 +21,8 @@ Model response: {generated}
 Return JSON only: {{"correctness": X, "groundedness": X, "conciseness": X, "overall": X}}"""
 
 
-def _get_judge():
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    return genai.GenerativeModel("gemini-1.5-flash")
+def _get_client():
+    return genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 
 def _parse_scores(text: str) -> dict:
@@ -41,11 +40,11 @@ def score(question: str, context: str, long_answer: str, generated: str) -> dict
     prompt = JUDGE_PROMPT.format(
         question=question, context=context, long_answer=long_answer, generated=generated
     )
-    judge = _get_judge()
+    client = _get_client()
 
     for attempt in range(2):
         try:
-            result = judge.generate_content(prompt).text
+            result = client.models.generate_content(model="gemini-1.5-flash", contents=prompt).text
             scores = _parse_scores(result)
             with shelve.open(_CACHE_PATH) as db:
                 db[cache_key] = scores

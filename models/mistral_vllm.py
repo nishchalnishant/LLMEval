@@ -28,12 +28,11 @@ class MistralVLLMModel(BaseModel):
 
     def generate(self, question: str, context: str) -> str:
         if not self._available:
-            raise RuntimeError("vLLM endpoint is not available")
-        prompt = f"{SYSTEM_PROMPT}\n\nContext: {context}\n\nQuestion: {question}\nAnswer:"
+            raise RuntimeError("ClinicalQA endpoint is not available")
         response = httpx.post(
-            f"{self._endpoint}/v1/completions",
-            json={"model": "mistral-7b-clinical", "prompt": prompt, "max_tokens": 128},
+            f"{self._endpoint}/answer",
+            json={"context": context, "question": question},
             timeout=30.0,
         )
         response.raise_for_status()
-        return response.json()["choices"][0]["text"].strip()
+        return response.json()["answer"].strip()

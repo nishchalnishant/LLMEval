@@ -1,7 +1,7 @@
 import hashlib
 import shelve
 import os
-import google.generativeai as genai
+from google import genai
 
 _CACHE_PATH = os.environ.get("JUDGE_CACHE_PATH", ".eval_cache")
 
@@ -10,17 +10,16 @@ def _cache_key(question: str, generated: str) -> str:
     return hashlib.md5((question + generated).encode()).hexdigest()
 
 
-def _get_judge():
-    genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-    return genai.GenerativeModel("gemini-1.5-flash")
+def _get_client():
+    return genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 
 def _judge_call(prompt: str, cache_key: str) -> str:
     with shelve.open(_CACHE_PATH) as db:
         if cache_key in db:
             return db[cache_key]
-    judge = _get_judge()
-    result = judge.generate_content(prompt).text.strip()
+    client = _get_client()
+    result = client.models.generate_content(model="gemini-1.5-flash", contents=prompt).text.strip()
     with shelve.open(_CACHE_PATH) as db:
         db[cache_key] = result
     return result

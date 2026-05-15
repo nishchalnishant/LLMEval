@@ -1,5 +1,6 @@
 import os
-import google.generativeai as genai
+from google import genai
+from google.genai import types
 from models.base import BaseModel
 
 SYSTEM_PROMPT = (
@@ -12,13 +13,13 @@ class GeminiModel(BaseModel):
     name = "gemini-1.5-flash"
 
     def __init__(self):
-        genai.configure(api_key=os.environ["GEMINI_API_KEY"])
-        self._model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
-            system_instruction=SYSTEM_PROMPT,
-        )
+        self._client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
     def generate(self, question: str, context: str) -> str:
         prompt = f"Context: {context}\n\nQuestion: {question}"
-        response = self._model.generate_content(prompt)
+        response = self._client.models.generate_content(
+            model="gemini-1.5-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(system_instruction=SYSTEM_PROMPT),
+        )
         return response.text.strip()
